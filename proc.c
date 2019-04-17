@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "ProcessInfo.h"
 
 struct {
   struct spinlock lock;
@@ -517,6 +518,8 @@ procdump(void)
   uint pc[10];
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+
+
     if(p->state == UNUSED)
       continue;
     if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
@@ -531,4 +534,29 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int
+getprocs(struct ProcessInfo *p){
+    //这里我就是混着来了,最外层给的是ProcessInfo的指针,外面传进来的是一个数组的指针, 我这里又不是按照要求,还是弄成数组的指针吧
+    struct proc *pro;
+    int count = 0;
+    acquire(&ptable.lock);
+    for( pro = ptable.proc; pro< &ptable.proc[NPROC]; pro++){
+        if(pro->state == UNUSED)
+            continue;
+        //p->name = pro->name;
+        safestrcpy(p->name, pro->name, sizeof(pro->name));
+        p->pid = pro->pid;
+        p->ppid = pro->parent->pid;
+        p->sz = pro->sz;
+        p->state = pro->state;
+        p++;
+        count++;
+    }
+    release(&ptable.lock);
+    if(count == 0)
+        return -1;
+    return count;
+
 }

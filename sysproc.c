@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "ProcessInfo.h"
 
 int
 sys_fork(void)
@@ -88,4 +89,13 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+int
+sys_getprocs(void){
+    //首先就是要自己虚拟出来一个参数,去栈里面找到这个参数,然后,准备好之后,要传到里面的proc.c中的getprocs的方法之中的.
+    struct ProcessInfo *p;
+    if(argptr(0, (void*)&p, sizeof(*p)) < 0)
+        return -1;
+    return getprocs(p);
 }
